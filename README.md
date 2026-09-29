@@ -96,8 +96,10 @@ $ python3 sniffer.py --iface eth0
 ### Sample redacted output
 
 ```json
-{"ts": 1790125170.9, "proto": "DNS", "src_ip": "192.168.1.xxx", "dst_ip": "8.8.8.xxx", "src_port": 5353, "dst_port": 53, "dns_query": "example.com", "http_host": null, "http_line": null, "summary": "DNS 192.168.1.xxx:5353 -> 8.8.8.xxx:53"}
-{"ts": 1790125170.91, "proto": "HTTP", "src_ip": "192.168.1.xxx", "dst_ip": "93.184.216.xxx", "src_port": 51000, "dst_port": 80, "dns_query": null, "http_host": "example.com", "http_line": "GET /login?user=alice&token=[REDACTED] HTTP/1.1", "summary": "HTTP 192.168.1.xxx:51000 -> 93.184.216.xxx:80"}
+user=alice&token=[REDACTED] HTTP/1.1", "summary": "HTTP 127.0.0.xxx:34596 -> 127.0.0.xxx:8000"}
+{"ts": 1790638366.390926, "proto": "TCP", "src_ip": "127.0.0.xxx", "dst_ip": "127.0.0.xxx", "src_port": 8000, "dst_port": 34596, "dns_query": null, "http_host": null, "http_line": null, "summary": "TCP 127.0.0.xxx:8000 -> 127.0.0.xxx:34596"}
+{"ts": 1790638614.07707, "proto": "DNS", "src_ip": "127.0.0.xxx", "dst_ip": "127.0.0.xxx", "src_port": 56090, "dst_port": 53, "dns_query": "store.steampowered.com", "http_host": null, "http_line": null, "summary": "DNS 127.0.0.xxx:56090 -> 127.0.0.xxx:53"}
+{"ts": 1790638366.394006, "proto": "TCP", "src_ip": "127.0.0.xxx", "dst_ip": "127.0.0.xxx", "src_port": 34596, "dst_port": 8000, "dns_query": null, "http_host": null, "http_line": null, "summary": "TCP 127.0.0.xxx:34596 -> 127.0.0.xxx:8000"}
 ```
 
 Note the masked IPs, and `token=[REDACTED]` in place of the real token —
@@ -153,15 +155,11 @@ rules:
 - Default to pcap mode when live-capture privileges are missing, rather
   than suggesting privilege escalation
 
-### What Copilot suggested that was rejected/modified (fill this in per-student)
+### What Copilot suggested that was rejected/modified 
+-Improve HTTP detection: parse more request shapes than just payloads starting with “GET ” / “POST ”, because real traffic often has extra bytes, fragmented TCP payloads, or different casing. It would be more resilient to parse headers before deciding the packet is HTTP.
+-Harden the interface allowlist: normalize names case-insensitively and centralize the validation so aliases like “Lo” or “Loopback 1” are handled consistently. This is the biggest security boundary in the project.
+- Redact more aggressively in the parsed record, not only in the final JSON: ensure any future summary/debug fields cannot accidentally leak secrets, even if they are added later.
 
-> Example format for your report:
-> - Copilot suggested using `scapy.sniff(iface=None, ...)` to "just sniff
->   everything" — rejected, since that bypasses the allowlist. Replaced
->   with an explicit `iface` argument checked against `ALLOWED_IFACES`.
-> - Copilot's first redaction regex only matched lowercase `password=` —
->   modified to be case-insensitive and extended to cover `token`,
->   `api_key`, `secret`, `session`.
-> - Copilot suggested writing full HTTP payloads to the log unredacted
+
 >   "for debugging" — rejected; only the first request line and `Host`
 >   header (after redaction) are logged.
