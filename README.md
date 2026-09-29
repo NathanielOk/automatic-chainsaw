@@ -157,9 +157,9 @@ rules:
 
 ### What Copilot suggested that was rejected/modified 
 -Improve HTTP detection: parse more request shapes than just payloads starting with “GET ” / “POST ”, because real traffic often has extra bytes, fragmented TCP payloads, or different casing. It would be more resilient to parse headers before deciding the packet is HTTP.
+
 -Harden the interface allowlist: normalize names case-insensitively and centralize the validation so aliases like “Lo” or “Loopback 1” are handled consistently. This is the biggest security boundary in the project.
+
 - Redact more aggressively in the parsed record, not only in the final JSON: ensure any future summary/debug fields cannot accidentally leak secrets, even if they are added later.
 
 
->   "for debugging" — rejected; only the first request line and `Host`
->   header (after redaction) are logged.
